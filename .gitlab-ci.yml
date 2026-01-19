@@ -1,3 +1,10 @@
+workflow:
+  rules:
+    # Run pipelines only for updates that land on main (direct push or merge result)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never
+
 stages:
   - build
   - test
