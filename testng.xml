@@ -4,6 +4,9 @@
        parallel="methods"
        thread-count="4"
        data-provider-thread-count="4">
+    <listeners>
+        <listener class-name="com.automention.framework.listeners.ReportSummaryListener"/>
+    </listeners>
     <test name="Cucumber Tests">
         <classes>
             <class name="com.automention.framework.runners.TestRunner"/>
