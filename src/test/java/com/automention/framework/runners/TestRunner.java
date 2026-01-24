@@ -21,8 +21,7 @@ import org.testng.annotations.DataProvider;
                 "json:target/cucumber.json",
                 "junit:target/cucumber.xml"
         },
-        monochrome = true,
-        tags = "@Scenario1 or @Scenario2 or @Scenario3"
+        monochrome = true
 )
 public class TestRunner extends AbstractTestNGCucumberTests {
 

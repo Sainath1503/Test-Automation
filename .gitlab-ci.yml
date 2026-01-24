@@ -19,6 +19,9 @@ variables:
   ELASTICSEARCH_ENABLED: "true"
   ELASTICSEARCH_HOST: "elasticsearch"
   ELASTICSEARCH_PORT: "9200"
+  TEST_TAGS:
+    value: "not @Ignore"
+    description: "Cucumber tags to filter tests (e.g. @Scenario1, @Scenario2)"
 
 # Cache Maven dependencies
 cache:
@@ -65,7 +68,7 @@ test:
         -e ELASTICSEARCH_HOST=$ELASTICSEARCH_HOST \
         -e ELASTICSEARCH_PORT=$ELASTICSEARCH_PORT \
         maven:3.9.5-eclipse-temurin-17 \
-        mvn clean test
+        mvn clean test -Dcucumber.filter.tags="$TEST_TAGS"
   after_script:
     - docker-compose down -v
   artifacts:
@@ -108,7 +111,7 @@ test-docker-compose:
         -e ELASTICSEARCH_HOST=$ELASTICSEARCH_HOST \
         -e ELASTICSEARCH_PORT=$ELASTICSEARCH_PORT \
         maven:3.9.5-eclipse-temurin-17 \
-        mvn clean test
+        mvn clean test -Dcucumber.filter.tags="$TEST_TAGS"
   after_script:
     - docker-compose logs selenium-hub
     - docker-compose logs selenium-node-chrome
