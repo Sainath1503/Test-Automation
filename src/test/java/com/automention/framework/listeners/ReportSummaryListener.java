@@ -3,6 +3,8 @@ package com.automention.framework.listeners;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.ISuite;
+import org.testng.ISuiteResult;
+import org.testng.ITestContext;
 import org.testng.ISuiteListener;
 
 import java.io.File;
@@ -42,11 +44,27 @@ public class ReportSummaryListener implements ISuiteListener {
 
     @Override
     public void onFinish(ISuite suite) {
+        // Check for test failures
+        boolean hasFailures = checkForTestFailures(suite);
+        
         System.out.println("");
         System.out.println("=================================================================================");
-        System.out.println("                    TEST EXECUTION SUMMARY - REPORT LOCATIONS                    ");
+        
+        // Print test execution status
+        if (hasFailures) {
+            System.out.println("                              ⚠️  TEST FAILURE ⚠️                              ");
+            System.out.println("=================================================================================");
+            System.out.println("");
+            System.out.println("One or more tests have failed. Please review the test results below.");
+            System.out.println("");
+        } else {
+            System.out.println("                    TEST EXECUTION SUMMARY - REPORT LOCATIONS                    ");
+        }
         System.out.println("=================================================================================");
         System.out.println("");
+        
+        // Print test statistics
+        printTestStatistics(suite, hasFailures);
         
         // Print Cucumber HTML Report Location
         printCucumberReportLocation();
@@ -55,7 +73,68 @@ public class ReportSummaryListener implements ISuiteListener {
         printElasticsearchKibanaInfo();
         
         System.out.println("=================================================================================");
+        if (hasFailures) {
+            System.out.println("                              ⚠️  TEST FAILURE ⚠️                              ");
+        }
+        System.out.println("=================================================================================");
         System.out.println("");
+    }
+    
+    /**
+     * Check if there are any test failures in the suite
+     */
+    private boolean checkForTestFailures(ISuite suite) {
+        try {
+            for (ISuiteResult suiteResult : suite.getResults().values()) {
+                ITestContext testContext = suiteResult.getTestContext();
+                int failedTests = testContext.getFailedTests().size();
+                int failedConfigurations = testContext.getFailedConfigurations().size();
+                
+                if (failedTests > 0 || failedConfigurations > 0) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Error checking for test failures: {}", e.getMessage());
+        }
+        return false;
+    }
+    
+    /**
+     * Print test execution statistics
+     */
+    private void printTestStatistics(ISuite suite, boolean hasFailures) {
+        try {
+            int passedTests = 0;
+            int failedTests = 0;
+            int skippedTests = 0;
+            
+            for (ISuiteResult suiteResult : suite.getResults().values()) {
+                ITestContext testContext = suiteResult.getTestContext();
+                passedTests += testContext.getPassedTests().size();
+                failedTests += testContext.getFailedTests().size();
+                skippedTests += testContext.getSkippedTests().size();
+            }
+            
+            // Calculate total from actual results (more accurate than getAllTestMethods)
+            int totalTests = passedTests + failedTests + skippedTests;
+            
+            System.out.println("TEST EXECUTION STATISTICS:");
+            System.out.println("  Total Tests:  " + totalTests);
+            System.out.println("  Passed:       " + passedTests + " ✓");
+            System.out.println("  Failed:       " + failedTests + (hasFailures ? " ✗" : ""));
+            System.out.println("  Skipped:      " + skippedTests);
+            System.out.println("");
+            
+            if (hasFailures) {
+                System.out.println("STATUS: TEST FAILURE - " + failedTests + " test(s) failed");
+            } else {
+                System.out.println("STATUS: ALL TESTS PASSED");
+            }
+            System.out.println("");
+        } catch (Exception e) {
+            logger.warn("Error printing test statistics: {}", e.getMessage());
+        }
     }
 
     private void printCucumberReportLocation() {

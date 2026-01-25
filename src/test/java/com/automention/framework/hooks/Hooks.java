@@ -2,6 +2,7 @@ package com.automention.framework.hooks;
 
 import com.automention.framework.config.ApplicationConfig;
 import com.automention.framework.driver.WebDriverManager;
+import com.automention.framework.pages.LoginPage;
 import com.automention.framework.utils.ElasticSearchUtil;
 import com.automention.framework.utils.ScreenshotUtil;
 import com.automention.framework.utils.TestContext;
@@ -33,6 +34,9 @@ public class Hooks {
 
     @Autowired
     private ApplicationConfig config;
+
+    @Autowired
+    private LoginPage loginPage;
 
     @Before
     public void setUp(Scenario scenario) {
@@ -69,6 +73,36 @@ public class Hooks {
             
             // Get login message from context (success or error message)
             String loginMessage = TestContext.getLoginMessage();
+            
+            // If login message is not in context, try to capture it from the page
+            if ((loginMessage == null || loginMessage.isEmpty()) && webDriverManager != null) {
+                try {
+                    // Try to get success message first
+                    try {
+                        String successMsg = loginPage.getSuccessMessage();
+                        if (successMsg != null && !successMsg.isEmpty()) {
+                            loginMessage = successMsg;
+                            logger.info("Captured success message in @After: {}", loginMessage);
+                        }
+                    } catch (Exception e) {
+                        // Success message not found, try error message
+                        try {
+                            if (loginPage.verifyErrorMessageDisplayed()) {
+                                String errorMsg = loginPage.getErrorMessage();
+                                if (errorMsg != null && !errorMsg.isEmpty()) {
+                                    loginMessage = errorMsg;
+                                    logger.info("Captured error message in @After: {}", loginMessage);
+                                }
+                            }
+                        } catch (Exception e2) {
+                            logger.debug("Could not capture login message from page: {}", e2.getMessage());
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.debug("Could not access page to capture login message: {}", e.getMessage());
+                }
+            }
+            
             if (loginMessage != null && !loginMessage.isEmpty()) {
                 additionalData.put("loginMessage", loginMessage);
             }

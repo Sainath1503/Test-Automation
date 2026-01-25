@@ -73,6 +73,30 @@ public class LoginStepDefinitions {
         try {
             logger.info("Verifying login success");
             boolean isLoggedIn = loginPage.verifyLoginSuccess();
+            
+            // Try to capture login message (success or error) before assertion
+            try {
+                if (isLoggedIn) {
+                    // Login successful - try to get success message
+                    String successMsg = loginPage.getSuccessMessage();
+                    if (successMsg != null && !successMsg.isEmpty()) {
+                        TestContext.setLoginMessage(successMsg);
+                        logger.info("Success message captured: {}", successMsg);
+                    }
+                } else {
+                    // Login failed - try to get error message
+                    if (loginPage.verifyErrorMessageDisplayed()) {
+                        String errorMsg = loginPage.getErrorMessage();
+                        if (errorMsg != null && !errorMsg.isEmpty()) {
+                            TestContext.setLoginMessage(errorMsg);
+                            logger.info("Error message captured: {}", errorMsg);
+                        }
+                    }
+                }
+            } catch (Exception msgEx) {
+                logger.debug("Could not capture login message: {}", msgEx.getMessage());
+            }
+            
             Assert.assertTrue(isLoggedIn, "Login was not successful");
             screenshotUtil.captureScreenshot("LoginSuccess");
             logger.info("Login verification passed");
