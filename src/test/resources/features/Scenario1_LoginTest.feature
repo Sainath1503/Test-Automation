@@ -17,7 +17,7 @@ Feature: Login Test Scenario 1
   @Scenario1
   Scenario: User attempts login with invalid password and verifies error message
     Given I navigate to the login page
-    When I enter username "student" and password "WrongPassword123"
+    When I enter username "student" and password "WrongPassword321"
     And I click on submit button
     Then I should not be successfully logged in
     And I should see the error message "Your password is invalid!"
